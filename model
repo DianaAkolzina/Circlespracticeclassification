@@ -1,0 +1,160 @@
+'''
+Mean Squared Error (MSE): Measures the average squared difference between predicted and actual values.
+It is commonly used for regression problems.
+
+Binary Cross-Entropy: Measures the cross-entropy between predicted and actual binary labels.
+ It is commonly used for binary classification problems.
+
+Categorical Cross-Entropy: Measures the cross-entropy between predicted and actual categorical labels.
+ It is commonly used for multiclass classification problems.
+
+Sparse Categorical Cross-Entropy: Similar to categorical cross-entropy,
+but accepts integer labels instead of one-hot encoded labels.
+
+Kullback-Leibler Divergence (KL divergence): Measures the divergence between predicted and actual
+probability distributions. It is commonly used for probabilistic models.
+
+Cosine Similarity: Measures the cosine distance between predicted and actual vectors.
+It is commonly used for similarity-based tasks such as image retrieval.
+
+Hinge Loss: Measures the hinge distance between predicted and actual labels. It is commonly used for
+support vector machines (SVM) and binary classification problems.
+
+Huber Loss: Similar to mean squared error, but less sensitive to outliers.
+It is commonly used for regression problems with noisy data.
+
+Mean Absolute Error (MAE): Measures the average absolute difference between
+predicted and actual values. It is commonly used for regression problems.
+'''
+
+from sklearn.datasets import make_circles
+import pandas as pd
+import tensorflow as tf
+import numpy as np
+'''
+The statement from sklearn.datasets
+import make_circles imports the function 
+make_circles from the datasets module of 
+the scikit-learn (also known as sklearn) library.
+
+make_circles is a function in sklearn 
+that generates a synthetic dataset consisting 
+of concentric circles. It can be useful for 
+testing and visualizing algorithms that are designed 
+to work with non-linearly separable data.
+
+Once imported, the make_circles function 
+can be called with specific parameters to 
+generate a dataset with a specified number 
+of samples, noise level, and other characteristics. 
+The function returns a tuple of two arrays, 
+representing the feature matrix and target 
+vector of the generated dataset.
+'''
+# Make 1000 examples
+n_samples = 1000
+
+# Create circles
+X, y = make_circles(n_samples,  noise=0.05,  random_state=42)
+
+#create the test worse circles
+# Create circles
+X1, y1 = make_circles(n_samples,  noise=0.08,  random_state=13)
+# Make dataframe of features and labels
+
+
+# Make dataframe of features and labels
+
+
+circles = pd.DataFrame({"X0":X[:, 0], "X1":X[:, 1], "label":y})
+print(circles.head())
+# Check out the different labels
+print(circles.label.value_counts())
+
+# Visualize with a plot
+import matplotlib.pyplot as plt
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.RdYlBu)
+plt.show()
+
+# Check the shapes of our features and labels
+print(X.shape, y.shape)
+
+# Check how many samples we have
+print(len(X), len(y))
+
+# View the first example of features and labels
+print(X[0], y[0])
+
+# Set random seed
+tf.random.set_seed(42)
+
+# 1. Create the model using the Sequential API
+model_1 = tf.keras.Sequential([
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 1, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 2, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 3, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(1)  # output layer
+])
+
+# 2. Compile the model
+model_1.compile(loss=tf.keras.losses.mae, # binary since we are working with 2 clases (0 & 1)
+                optimizer=tf.keras.optimizers.Adam(),
+                metrics=['accuracy'])
+
+# Train our model for longer (more chances to look at the data)
+model_1.fit(X, y, epochs=2000, verbose=0) # set verbose=0 to remove training updates
+model_1.evaluate(X1, y1)
+
+
+def plot_decision_boundary(model_1, X, y):
+    """
+    Plots the decision boundary created by a model predicting on X.
+    This function has been adapted from two phenomenal resources:
+     1. CS231n - https://cs231n.github.io/neural-networks-case-study/
+     2. Made with ML basics - https://github.com/GokuMohandas/MadeWithML/blob/main/notebooks/08_Neural_Networks.ipynb
+    """
+    # Define the axis boundaries of the plot and create a meshgrid
+    x_min, x_max = X[:, 0].min() - 0.1, X[:, 0].max() + 0.1
+    y_min, y_max = X[:, 1].min() - 0.1, X[:, 1].max() + 0.1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100),
+                         np.linspace(y_min, y_max, 100))
+
+
+    '''
+    In Python, np.c_ is a function provided by the NumPy
+    library that is used to concatenate arrays along the 
+    second axis. The function is commonly used in data analysis 
+    and manipulation tasks where it is necessary to combine two arrays column-wise.
+
+    The np.c_ function takes two or more arrays as its arguments and returns a 
+    new array by concatenating the input arrays column-wise. The resulting array 
+    will have the same number of rows as the input arrays, and the number of columns 
+    will be equal to the sum of the number of columns in the input arrays.
+    '''
+
+    x_in = np.c_[
+        xx.ravel(), yy.ravel()]
+
+    # Make predictions using the trained model
+    y_pred = model_1.predict(x_in)
+
+    # Check for multi-class
+    if model_1.output_shape[
+        -1] > 1:  # checks the final dimension of the model's output shape, if this is > (greater than) 1, it's multi-class
+        print("doing multiclass classification...")
+        # We have to reshape our predictions to get them ready for plotting
+        y_pred = np.argmax(y_pred, axis=1).reshape(xx.shape)
+    else:
+        print("doing binary classifcation...")
+        y_pred = np.round(np.max(y_pred, axis=1)).reshape(xx.shape)
+
+    # Plot decision boundary
+    plt.contourf(xx, yy, y_pred, cmap=plt.cm.RdYlBu, alpha=0.7)
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.RdYlBu)
+    plt.xlim(xx.min(), xx.max())
+    plt.ylim(yy.min(), yy.max())
+
+plot_decision_boundary(model_1, X1, y1)
+plt.show()
+
+
