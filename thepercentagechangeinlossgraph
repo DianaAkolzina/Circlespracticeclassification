@@ -1,0 +1,40 @@
+# Set random seed
+tf.random.set_seed(42)
+
+# 1. Create the model using the Sequential API
+model_1 = tf.keras.Sequential([
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 1, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 2, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(4, activation=tf.keras.activations.relu),  # hidden layer 3, 4 neurons, ReLU activation
+    tf.keras.layers.Dense(1)  # output layer
+])
+
+# 2. Compile the model
+model_1.compile(loss=tf.keras.losses.mae, # binary since we are working with 2 clases (0 & 1)
+                optimizer=tf.keras.optimizers.Adam(),
+                metrics=['accuracy'])
+
+# Initialize variables
+prev_loss = np.inf
+target_epoch = None
+
+# Train our model for longer (more chances to look at the data)
+history = model_1.fit(X, y, epochs=2000, verbose=0) # set verbose=0 to remove training updates
+
+# Plot the loss graph
+plt.plot(history.history['loss'])
+plt.title('Model Loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+
+# Determine the epoch where the difference in loss is less than 0.01 percent
+for epoch, loss in enumerate(history.history['loss']):
+    if (prev_loss - loss)/prev_loss < 0.0001:
+        target_epoch = epoch
+        break
+    prev_loss = loss
+
+# Plot a vertical line on the loss graph at the target epoch
+plt.axvline(x=target_epoch, color='red')
+
+plt.show()
