@@ -1,0 +1,8 @@
+history = model_1.fit(X, y, epochs=2000, verbose=0) # set verbose=0 to remove training updates
+# Plot the loss graph
+plt.plot(history.history['loss'])
+plt.title('Model Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.show()
+
